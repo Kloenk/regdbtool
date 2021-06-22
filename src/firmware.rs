@@ -2,6 +2,7 @@ use clap::{App, Arg, SubCommand};
 
 use anyhow::{Result, Context};
 
+#[cfg(feature = "sing")]
 use crate::signing::SignInfo;
 
 pub(crate) fn app() -> App<'static, 'static> {
@@ -47,6 +48,8 @@ pub(crate) fn app() -> App<'static, 'static> {
                 .setting(clap::AppSettings::ColoredHelp)
                 .arg(
                     Arg::with_name("input")
+                        .long("input")
+                        .short("i")
                         .help("input file")
                         .takes_value(true)
                         .default_value("db.txt")
@@ -54,6 +57,8 @@ pub(crate) fn app() -> App<'static, 'static> {
                 )
                 .arg(
                     Arg::with_name("output")
+                        .long("output")
+                        .short("o")
                         .help("output file")
                         .takes_value(true)
                         .default_value("regulatory.db")
@@ -71,21 +76,20 @@ fn args() -> Vec<Arg<'static, 'static>> {
 }
 
 
+#[cfg(feature = "sign")]
 pub(crate) fn run(matches: &clap::ArgMatches) -> Result<()>{
 
-    if cfg!(feature = "sign") {
-        let info = SignInfo::from_matches(matches)?;
-        let keyfile = matches.value_of("keyfile");
-        if let Some(sub_matches) = matches.subcommand_matches("sign") {
-            //info!("sign zone {} with key {}", matches.value_of("input").unwrap(), keyfile);//matches.value_of("keyfile").unwrap());
-            sign(
-                sub_matches.value_of("input").unwrap(),
-                sub_matches.value_of("output"),
-                matches.value_of("keyfile").unwrap(), // FIXME: check if it's set
-                matches.value_of("cert"),
-                matches.value_of("password"),
-            )?;
-        }
+    let info = SignInfo::from_matches(matches)?;
+    let keyfile = matches.value_of("keyfile");
+    if let Some(sub_matches) = matches.subcommand_matches("sign") {
+        //info!("sign zone {} with key {}", matches.value_of("input").unwrap(), keyfile);//matches.value_of("keyfile").unwrap());
+        sign(
+            sub_matches.value_of("input").unwrap(),
+            sub_matches.value_of("output"),
+            matches.value_of("keyfile").unwrap(), // FIXME: check if it's set
+            matches.value_of("cert"),
+            matches.value_of("password"),
+        )?;
     }
 
     if let Some(sub_matches) = matches.subcommand_matches("generate") {
@@ -94,6 +98,16 @@ pub(crate) fn run(matches: &clap::ArgMatches) -> Result<()>{
     }
     Ok(())
 }
+
+#[cfg(not(feature = "sign"))]
+pub(crate) fn run(matches: &clap::ArgMatches) -> Result<()> {
+    if let Some(sub_matches) = matches.subcommand_matches("generate") {
+        trace!("generate firmware");
+        generate(sub_matches.value_of("input").unwrap(), sub_matches.value_of("output").unwrap())?;
+    }
+    Ok(()) 
+}
+
 
 
 #[cfg(feature = "sign")]
