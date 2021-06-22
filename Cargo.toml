@@ -22,4 +22,4 @@ log = { version = "0.4", features = [ "max_level_trace", "release_max_level_info
 pretty_env_logger = "0.4"
 
 openssl = { version = "0.10", optional = true }
-dialoguer = { version = "0.7", optional = true }
+dialoguer = { version = "0.8", optional = true }
